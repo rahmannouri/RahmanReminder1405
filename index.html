@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>سامانه یادآور</title>
+<style>
+:root{
+  --navy:#0d2d52;--navy2:#123a6b;--blue:#1e6fd9;--blueh:#3a86eb;--gold:#c9a227;
+  --page:#eef2f7;--card:#ffffff;--ink:#212b36;--soft:#6b7785;--line:#dce5f1;
+  --chip:#e8eff9;--danger:#b71c1c;--ok:#2e7d32;--shadow:0 1px 3px rgba(16,42,80,.08),0 8px 24px rgba(16,42,80,.07);
+}
+html[data-theme="dark"]{
+  --navy:#0a1a30;--navy2:#0e2440;--blue:#4a92f0;--blueh:#6aabf5;--gold:#d9b640;
+  --page:#0b1421;--card:#122033;--ink:#dbe4f0;--soft:#8fa3bb;--line:#22354e;
+  --chip:#1a2d47;--danger:#ff8a8a;--ok:#7fd07f;--shadow:0 1px 3px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--ink);font:15px "Segoe UI",Tahoma,sans-serif;padding-bottom:80px;transition:background .25s,color .25s}
+header{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 24px;flex-wrap:wrap}
+header h1{margin:0;font-size:21px;display:flex;align-items:center;gap:8px}
+header .sub{margin:4px 0 0;font-size:12.5px;color:#aac3e1}
+#clock{text-align:center;font-weight:bold;line-height:1.7;font-size:14px;color:#e8eef7;white-space:nowrap}
+#theme{background:rgba(255,255,255,.12);color:#fff;font-size:16px;padding:8px 11px;border-radius:8px}
+#theme:hover{background:rgba(255,255,255,.22)}
+.stripe{display:block;height:3px;background:linear-gradient(90deg,var(--gold),#e6c65a,var(--gold))}
+main{max-width:720px;margin:18px auto;padding:0 14px}
+.card{background:var(--card);padding:18px 20px;border-radius:12px;box-shadow:var(--shadow);margin-bottom:14px}
+.card h2{font-size:16px;color:var(--navy);margin:0 0 14px;display:flex;align-items:center;gap:8px}
+html[data-theme="dark"] .card h2{color:#8fb4e8}
+label{display:block;font-size:12.5px;color:var(--soft);margin-bottom:10px}
+input,select{font:inherit;color:var(--ink);padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);width:100%;margin-top:4px}
+input:focus,select:focus{outline:2px solid var(--blue);outline-offset:0;border-color:var(--blue)}
+.trio,.duo{display:flex;gap:8px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+button{font:inherit;font-weight:bold;border:0;border-radius:8px;cursor:pointer;padding:9px 16px;transition:background .15s,transform .1s}
+button:active{transform:scale(.98)}
+#add{background:var(--blue);color:#fff}
+#add:hover{background:var(--blueh)}
+#cancel{background:var(--chip);color:var(--ink)}
+#msg{margin-top:8px;font-size:13px;color:var(--danger);min-height:18px}
+.g{font-size:13px;font-weight:bold;color:var(--navy);margin:16px 0 8px;padding-right:10px;border-right:3px solid var(--gold)}
+html[data-theme="dark"] .g{color:#8fb4e8}
+.g.late{border-right-color:var(--danger);color:var(--danger)}
+.r{background:var(--card);display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;padding:12px 14px;margin-bottom:6px;border-radius:10px;box-shadow:var(--shadow);font-size:13px;border-right:3px solid transparent}
+.r.late{border-right-color:var(--danger)}
+.r.today{border-right-color:var(--gold)}
+.r .t{flex:1 1 200px;min-width:150px}
+.r .t b{font-size:14px;display:block;overflow-wrap:anywhere}
+.r .t small{color:var(--soft);font-size:12px}
+.r .when{color:var(--soft);white-space:nowrap}
+.rem{color:var(--blue);font-weight:bold;white-space:nowrap}
+html[data-theme="dark"] .rem{color:#7fb3f5}
+.chip{display:inline-block;background:var(--chip);color:var(--soft);border-radius:20px;padding:2px 10px;font-size:11.5px}
+.rbtn{background:var(--chip);color:var(--ink);padding:5px 9px;font-size:12px;border-radius:7px}
+.rbtn:hover{background:var(--line)}
+.x{background:none;color:var(--danger);padding:5px 8px;font-size:14px;border-radius:7px}
+.x:hover{background:rgba(183,28,28,.1)}
+.empty{color:var(--soft);font-size:13px;padding:12px 2px}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:14px;font-size:12px;color:var(--soft)}
+.bar button{background:var(--chip);color:var(--ink);font-size:12.5px;padding:8px 13px}
+.bar button:hover{background:var(--line)}
+#fs{flex:1 1 100%;overflow-wrap:anywhere}
+footer{position:fixed;bottom:0;left:0;right:0;background:var(--navy);color:#c8d6e8;text-align:center;font-size:12.5px;padding:10px}
+#toasts{position:fixed;left:18px;bottom:58px;display:flex;flex-direction:column;gap:10px;z-index:9}
+.toast{width:min(390px,calc(100vw - 36px));background:var(--navy);color:#fff;border-top:5px solid var(--gold);border-radius:14px;padding:16px 18px;text-align:center;box-shadow:0 8px 28px rgba(0,0,0,.35);animation:in .35s ease-out}
+@keyframes in{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.toast small{display:block;color:#aac3e1;font-size:12.5px}
+.toast strong{display:block;font-size:18px;margin:10px 0 12px;overflow-wrap:anywhere}
+.toast em{display:block;font-style:normal;color:#ffc107;font-size:12px;margin-bottom:10px}
+.toast .li{text-align:right;font-size:13px;line-height:2;margin-bottom:10px}
+.toast .b{display:flex;gap:8px}
+.toast button{flex:1;padding:10px 4px;background:#244873;color:#fff;font-size:12.5px}
+.toast button:hover{background:#345c8c}
+.toast .ok{background:var(--blue)}.toast .ok:hover{background:var(--blueh)}
+details.help{background:var(--card);border-radius:12px;box-shadow:var(--shadow);padding:14px 18px;margin-bottom:14px;font-size:13px;color:var(--soft)}
+details.help summary{cursor:pointer;font-weight:bold;color:var(--navy)}
+html[data-theme="dark"] details.help summary{color:#8fb4e8}
+details.help p{margin:10px 0 0;line-height:2}
+kbd{background:var(--chip);border:1px solid var(--line);border-radius:4px;padding:1px 6px;font-family:inherit}
+@media(max-width:560px){.grid{grid-template-columns:1fr}.r .when{font-size:12px}}
+@media(prefers-reduced-motion:reduce){.toast{animation:none}button{transition:none}}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>🔔 سامانه یادآور</h1>
+    <p class="sub">مدیریت سررسیدها و یادآوری‌ها — کاملاً آفلاین</p>
+  </div>
+  <div id="clock"></div>
+  <button id="theme" title="تغییر تم روشن / تاریک">🌙</button>
+</header>
+<i class="stripe"></i>
+<main>
+  <section class="card">
+    <h2 id="formTitle">➕ ثبت یادآور جدید</h2>
+    <label>عنوان<input id="t" maxlength="120" placeholder="مثلاً: پرداخت قبض آب"></label>
+    <div class="grid">
+      <label>تاریخ شمسی (سال / ماه / روز)
+        <span class="trio"><input id="y" type="number" inputmode="numeric" min="1300" max="1600"><input id="mo" type="number" inputmode="numeric" min="1" max="12"><input id="d" type="number" inputmode="numeric" min="1" max="31"></span>
+      </label>
+      <label>ساعت (ساعت : دقیقه)
+        <span class="duo"><input id="h" type="number" inputmode="numeric" min="0" max="23"><input id="mi" type="number" inputmode="numeric" min="0" max="59"></span>
+      </label>
+      <label>تکرار
+        <select id="rp">
+          <option value="once">یکبار</option>
+          <option value="daily">روزانه</option>
+          <option value="weekly">هفتگی</option>
+          <option value="monthly">ماهانه</option>
+        </select>
+      </label>
+      <div style="align-self:end;margin-bottom:10px;display:flex;gap:8px">
+        <button id="add">افزودن یادآور</button>
+        <button id="cancel" hidden>انصراف</button>
+      </div>
+    </div>
+    <div id="msg" role="alert"></div>
+  </section>
+
+  <h2 class="g" style="margin-top:2px">📋 یادآورهای پیش‌رو</h2>
+  <div id="list"></div>
+
+  <div class="bar" style="margin-top:6px">
+    <button id="notif">🔔 فعال‌سازی نوتیف سیستم</button>
+    <span id="ns"></span>
+  </div>
+
+  <section class="card" style="margin-top:16px">
+    <h2>💾 ذخیره‌سازی و پشتیبان دوره‌ای</h2>
+    <div class="bar" style="margin-top:0">
+      <button id="fnew">📁 انتخاب پوشه پشتیبان</button>
+      <button id="fperm" hidden>اجازه دسترسی به پوشه</button>
+      <button id="backupNow">پشتیبان فوری</button>
+      <button id="exp">دانلود پشتیبان</button>
+      <button id="impb">بازیابی فایل پشتیبان</button>
+      <button id="mrg" hidden>ادغام با داده فعلی</button>
+      <input type="file" id="imp" accept=".json" hidden>
+      <span id="fs"></span>
+    </div>
+  </section>
+
+  <section class="card" style="margin-top:16px">
+    <h2>☁️ همگام‌سازی ابری</h2>
+    <div class="bar" style="margin-top:0">
+      <span id="cbox" style="display:flex;gap:8px;flex-wrap:wrap"><input id="cem" type="email" placeholder="ایمیل" autocomplete="username" dir="ltr"><input id="cpw" type="password" placeholder="رمز" autocomplete="current-password" dir="ltr"><button id="cin">ورود</button></span>
+      <button id="cout" hidden>خروج</button>
+      <span id="cs"></span>
+    </div>
+  </section>
+
+  <details class="help">
+    <summary>راهنما: اجرای خودکار هنگام روشن شدن سیستم</summary>
+    <p>این فایل HTML نمی‌تواند خودش در استارتاپ ویندوز ثبت شود؛ چون برنامه‌نصب نیست. راه‌حل ساده: یک میان‌بر از این فایل بسازید و در پوشه استارتاپ بگذارید — <kbd>Win+R</kbd> را بزنید، <kbd>shell:startup</kbd> تایپ کنید و Enter بزنید، سپس میان‌بر را داخل آن پوشه کپی کنید. از این پس با هر بار روشن شدن سیستم، مرورگر باز و یادآورهای آن روز نمایش داده می‌شود.</p>
+    <p>دو محدودیت مرورگر را در نظر بگیرید: تا وقتی این صفحه باز نباشد نوتیف و صدا دریافت نمی‌کنید، و اگر سیستم در زمان یادآور خواب باشد، پیغام بعد از بیداری و باز شدن صفحه نمایش داده می‌شود (بخش «عقب‌افتاده‌ها»). درباره ذخیره‌سازی: داده‌ها همیشه در حافظه مرورگر ذخیره می‌شوند و اگر «پوشه پشتیبان» را انتخاب کرده باشید، هر ۵ دقیقه (فقط وقتی تغییری رخ داده باشد) یک نسخه پشتیبان زمان‌دار هم در آن پوشه ساخته می‌شود؛ با هر بار اجرای برنامه، آخرین نسخه پشتیبان به‌صورت خودکار پیدا و بارگذاری می‌شود و فقط دو نسخه (آخرین نسخه امروز و آخرین نسخه قبل از امروز) نگه داشته می‌شوند.</p>
+  </details>
+</main>
+<footer>تهیه‌کننده: عبدالرحمان نوری — نسخه بهینه‌شده</footer>
+<div id="toasts"></div>
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const KEY='reminders_v1',THEME_KEY='reminders_theme',BASE=document.title;
+const RP={once:'یکبار',daily:'روزانه',weekly:'هفتگی',monthly:'ماهانه'};
+
+/* ---------- تم ---------- */
+const applyTheme=t=>{document.documentElement.dataset.theme=t;$('theme').textContent=t==='dark'?'☀️':'🌙'};
+applyTheme(localStorage.getItem(THEME_KEY)==='dark'?'dark':'light');
+$('theme').onclick=()=>{const t=document.documentElement.dataset.theme==='dark'?'light':'dark';localStorage.setItem(THEME_KEY,t);applyTheme(t)};
+
+/* ---------- ابزار ---------- */
+const p2=n=>String(n).padStart(2,'0');
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&'+'amp;','<':'&'+'lt;','>':'&'+'gt;','"':'&'+'quot;',"'":'&'+'#39;'}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+
+/* ---------- تقویم شمسی ---------- */
+const pf=new Intl.DateTimeFormat('en-US-u-ca-persian-nu-latn',{year:'numeric',month:'numeric',day:'numeric'});
+const jp=dt=>{const o={};pf.formatToParts(dt).forEach(p=>{if(p.type==='year'||p.type==='month'||p.type==='day')o[p.type]=+p.value});return[o.year,o.month,o.day]};
+function j2g(jy,jm,jd){jy+=1595;let days=-355668+365*jy+~~(jy/33)*8+~~(((jy%33)+3)/4)+jd+(jm<7?(jm-1)*31:(jm-7)*30+186),gy=400*~~(days/146097);days%=146097;
+if(days>36524){gy+=100*~~(--days/36524);days%=36524;if(days>=365)days++}
+gy+=4*~~(days/1461);days%=1461;if(days>365){gy+=~~((days-1)/365);days=(days-1)%365}
+let gd=days+1,s=[0,31,(gy%4==0&&gy%100!=0)||gy%400==0?29:28,31,30,31,30,31,31,30,31,30,31],gm;
+for(gm=0;gm<13;gm++){if(gd<=s[gm])break;gd-=s[gm]}return[gy,gm,gd]}
+// تبدیل شمسی به میلادی با راستی‌آزمایی رفت‌وبرگشتی
+function mk(y,m,d,h,mi){const[g,gm,gd]=j2g(y,m,d),dt=new Date(g,gm-1,gd,h,mi,0),b=jp(dt);return b[0]===y&&b[1]===m&&b[2]===d?dt:null}
+// طول ماه شمسی (برای تکرار ماهانه)
+function jMonthLen(jy,jm){for(let d=31;d>=29;d--)if(mk(jy,jm,d,12,0))return d;return 29}
+const fa=dt=>{const[y,m,d]=jp(dt);return`${y}/${p2(m)}/${p2(d)}  ${p2(dt.getHours())}:${p2(dt.getMinutes())}`};
+
+/* اعتبارسنجی داده — آیتم‌های خراب کنار گذاشته می‌شوند ولی بقیه نجات پیدا می‌کنند */
+const REPEATS=['once','daily','weekly','monthly'];
+function sanitize(raw){
+  let meta={};
+  if(raw&&!Array.isArray(raw)&&Array.isArray(raw.items)){meta=raw;raw=raw.items}
+  if(!Array.isArray(raw))return null;
+  const out=[],seen=new Set();let skipped=0;
+  for(const r of raw){
+    let ok=r&&typeof r==='object';
+    const id=ok?String(r.id||''):'',title=ok&&typeof r.title==='string'?r.title.trim():'';
+    const due=ok?+r.due:NaN,anchor=ok?+r.anchor:NaN;
+    if(!ok||!id||!title||!Number.isFinite(due)||due<=0||!REPEATS.includes(r.repeat)||seen.has(id)){skipped++;continue}
+    seen.add(id);
+    out.push({id,title,due,repeat:r.repeat,anchor:Number.isFinite(anchor)&&anchor>0?anchor:due,u:+r.u>0?+r.u:0});
+  }
+  const tomb={};if(meta.tomb&&typeof meta.tomb==='object')for(const[k,v] of Object.entries(meta.tomb))if(+v>0)tomb[k]=+v;
+  return{items:out,skipped,tomb,lc:+meta.lastChange||0};
+}
+
+/* ---------- وضعیت برنامه ---------- */
+let items=[];
+{const raw=sanitize(JSON.parse(localStorage.getItem(KEY)||'[]'));if(raw)items=raw.items}
+let tomb={};try{tomb=JSON.parse(localStorage.getItem(KEY+'_tomb')||'{}')||{}}catch(e){}
+const sig=i=>JSON.stringify([i.title,i.due,i.repeat,i.anchor]);
+let snap=new Map(items.map(i=>[i.id,sig(i)]));
+const lastChange=()=>Math.max(0,...items.map(i=>i.u||0),...Object.values(tomb));
+const bkData=()=>JSON.stringify({v:2,savedAt:Date.now(),lastChange:lastChange(),items,tomb});
+/* هر تغییر واقعی، زمان آخرین تغییر (u) می‌گیرد و حذف‌ها به‌صورت علامت حذف ثبت می‌شوند */
+function stamp(){
+  const now=Date.now(),cur=new Map();
+  for(const it of items){const s=sig(it);cur.set(it.id,s);if(snap.get(it.id)!==s)it.u=now;delete tomb[it.id]}
+  for(const id of snap.keys())if(!cur.has(id))tomb[id]=now;
+  snap=cur;
+}
+let dh=null,dirty=false,writeToken=0,editingId=null,rev=0,lastBackupRev=-1,lastBackupAt=0,bkTimer=0;
+const fsMsg=(t,bad)=>{const e=$('fs');e.textContent=t;e.style.color=bad?'var(--danger)':'var(--ok)'};
+
+/* ذخیره در حافظه مرورگر (سریع و همیشه در دسترس) */
+function saveLocal(){try{localStorage.setItem(KEY,JSON.stringify(items));localStorage.setItem(KEY+'_tomb',JSON.stringify(tomb))}catch(e){}}
+/* هر تغییری «نسخه» را جلو می‌برد تا پشتیبان دوره‌ای فقط وقتی نوشته شود که تغییر واقعی رخ داده */
+const save=()=>{stamp();saveLocal();rev++;dirty=true;cloudPush()};
+
+/* ادغام امن: فقط موارد سالم و تکراری‌نبودن اضافه می‌شود */
+function merge(list,tm){
+  tm=tm||{};let ch=false;
+  for(const k in tm)if(tm[k]>(tomb[k]||0)){tomb[k]=tm[k];ch=true}
+  for(const r of list){
+    const t=tomb[r.id]||0,i=items.find(x=>x.id===r.id);
+    if(t>0&&t>=(r.u||0))continue;
+    if(!i){items.push(r);ch=true}else if((r.u||0)>(i.u||0)){Object.assign(i,r);ch=true}
+  }
+  const n=items.length;items=items.filter(x=>!(tomb[x.id]>0&&tomb[x.id]>=(x.u||0)));
+  if(items.length!==n)ch=true;
+  snap=new Map(items.map(i=>[i.id,sig(i)]));
+  return ch;
+}
+
+/* ---------- پشتیبان‌گیری دوره‌ای روی پوشه انتخابی ---------- */
+const BACKUP_EVERY=5*60*1000, KEEP_BACKUPS=10;
+const z=n=>String(n).padStart(2,'0');
+const tsName=()=>{const d=new Date(),[y,m,dd]=jp(d);return`Reminder ${y}${p2(m)}${p2(dd)}${p2(d.getHours())}${p2(d.getMinutes())}.json`};
+const isBackupName=n=>/^Reminder \d{12}\.json$/.test(n);
+
+const idbPut=(k,v)=>new Promise(r=>{try{const q=indexedDB.open('rem',1);q.onupgradeneeded=()=>q.result.createObjectStore('k');q.onerror=()=>r();q.onsuccess=()=>{const s=q.result.transaction('k','readwrite').objectStore('k'),x=s.put(v,k);x.onsuccess=()=>r();x.onerror=()=>r()}}catch(e){r()}});
+const idbGet=k=>new Promise(r=>{try{const q=indexedDB.open('rem',1);q.onupgradeneeded=()=>q.result.createObjectStore('k');q.onerror=()=>r();q.onsuccess=()=>{const s=q.result.transaction('k').objectStore('k'),x=s.get(k);x.onsuccess=()=>r(x.result);x.onerror=()=>r()}}catch(e){r()}});
+
+/* فهرست نسخه‌های پشتیبان پوشه — نام‌ها زمان‌دارند، پس مرتب‌سازی الفبایی همان زمانی است */
+async function listBackups(){
+  const names=[];
+  try{for await(const[name,h] of dh.entries())if(h.kind==='file'&&isBackupName(name))names.push(name)}catch(e){}
+  return names.sort();
+}
+
+/* ساخت یک نسخه پشتیبان تازه در پوشه + حذف نسخه‌های قدیمی‌تر از حد مجاز */
+async function writeBackup(){
+  if(!dh||(!items.length&&!Object.keys(tomb).length))return false;
+  const my=++writeToken;
+  try{
+    const nm=tsName(),fh2=await dh.getFileHandle(nm,{create:true});
+    const w=await fh2.createWritable();
+    await w.write(bkData());
+    await w.close();
+    lastBackupRev=rev;lastBackupAt=Date.now();dirty=false;
+    if(my===writeToken){
+      const names=await listBackups(),day=nm.slice(9,17),prev=names.filter(n=>n.slice(9,17)<day).pop(),keep=new Set([nm,prev].filter(Boolean));
+      for(const n of names)if(!keep.has(n)){try{await dh.removeEntry(n)}catch(e){}}
+      fsMsg(`✓ آخرین پشتیبان: ${z(new Date(lastBackupAt).getHours())}:${z(new Date(lastBackupAt).getMinutes())} — ${keep.size} نسخه در پوشه (امروز + روز قبل) | پشتیبان بعدی: هر ۵ دقیقه پس از تغییر`);
+    }
+    return true;
+  }catch(e){
+    if(my===writeToken){fsMsg('پشتیبان‌گیری انجام نشد؛ روی «اجازه دسترسی به پوشه» بزنید.',1);$('fperm').hidden=false}
+    return false;
+  }
+}
+/* فقط وقتی از آخرین پشتیبان تغییری رخ داده باشد می‌نویسد */
+async function autoBackup(){if(rev!==lastBackupRev)await writeBackup()}
+
+/* پیدا کردن و بارگذاری آخرین نسخه پشتیبان */
+async function loadLatestBackup(){
+  const names=await listBackups();
+  if(!names.length)return false;
+  const latest=names[names.length-1];
+  let text='';
+  try{const fh2=await dh.getFileHandle(latest);const f=await fh2.getFile();text=await f.text()}catch(e){return false}
+  let parsed=null;
+  try{parsed=sanitize(JSON.parse(text))}catch(e){}
+  if(!parsed){fsMsg('آخرین پشتیبان معتبر نیست؛ داده‌های فعلی تغییر نکردند.',1);return false}
+  merge(parsed.items,parsed.tomb);
+  return true;
+}
+
+$('fnew').onclick=async()=>{try{const h=await showDirectoryPicker({id:'reminder-backups',mode:'readwrite',startIn:'documents'});await idbPut('dh',h);dh=h;await startBackupMode()}catch(e){}};
+$('fperm').onclick=async()=>{try{if(await dh.requestPermission({mode:'readwrite'})==='granted')await startBackupMode()}catch(e){}};
+$('backupNow').onclick=()=>writeBackup();
+$('exp').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([bkData()],{type:'application/json'}));a.download=tsName();a.click()};
+$('impb').onclick=()=>$('imp').click();
+let pend=null;
+function applyRestore(p){merge(p.items,p.tomb);save();render();fsMsg('پشتیبان بازیابی شد ✓'+(p.skipped?` (${p.skipped} مورد نامعتبر نادیده گرفته شد)`:''))}
+$('imp').onchange=async e=>{
+  const f=e.target.files[0];e.target.value='';$('mrg').hidden=true;pend=null;
+  if(!f)return;
+  try{
+    const p=sanitize(JSON.parse(await f.text()));
+    if(!p)throw 0;
+    if(p.lc<lastChange()){pend=p;$('mrg').hidden=false;fsMsg(`خطا: این پشتیبان (${p.lc?fa(new Date(p.lc)):'بدون تاریخ'}) از اطلاعات فعلی (${fa(new Date(lastChange()))}) قدیمی‌تر است و بازیابی نشد.`,1);return}
+    applyRestore(p);
+  }catch(x){fsMsg('فایل پشتیبان معتبر نیست؛ داده‌های فعلی تغییر نکردند.',1)}
+};
+$('mrg').onclick=()=>{if(pend){applyRestore(pend);pend=null;$('mrg').hidden=true}};
+/* در لحظه مخفی/بستن صفحه اگر تغییر ذخیره‌نشده باشد فوراً پشتیبان گرفته می‌شود */
+document.addEventListener('visibilitychange',()=>{if(document.hidden)autoBackup()});
+addEventListener('pagehide',()=>{autoBackup()});
+addEventListener('beforeunload',e=>{if(window.showDirectoryPicker&&items.length&&dirty){e.preventDefault();e.returnValue=''}});
+
+/* شروع حالت پشتیبان‌گیری دوره‌ای */
+async function startBackupMode(){
+  $('fperm').hidden=true;
+  const loaded=await loadLatestBackup();
+  if(loaded)fsMsg(`✓ آخرین پشتیبان بارگذاری شد — ${items.length} یادآور | پشتیبان بعدی: هر ۵ دقیقه پس از تغییر`);
+  saveLocal();render();
+  lastBackupRev=rev;
+  if(!bkTimer)bkTimer=setInterval(autoBackup,BACKUP_EVERY);
+}
+
+/* ---------- تکرارها (بر اساس لنگر اولیه، تا اسنوز و تأخیر زمان تکرار را جابه‌جا نکند) ---------- */
+function advance(d,rep){
+  if(rep==='daily'){const n=new Date(d);n.setDate(n.getDate()+1);return n}
+  if(rep==='weekly'){const n=new Date(d);n.setDate(n.getDate()+7);return n}
+  const[y,m,dd]=jp(d);let ny=y,nm=m+1;if(nm>12){nm=1;ny++}
+  const cand=mk(ny,nm,Math.min(dd,jMonthLen(ny,nm)),d.getHours(),d.getMinutes());
+  return cand||new Date(d.getTime()+30*864e5);
+}
+function nextOccurrence(it,after){
+  if(it.repeat==='once')return null;
+  const t=after||Date.now();
+  let d=new Date(it.anchor);
+  for(let k=0;k<10000&&d.getTime()<=t;k++)d=advance(d,it.repeat);
+  return d;
+}
+
+/* ---------- شمارش معکوس ---------- */
+function rem(ms){
+  if(ms<=30000)return'اکنون';
+  const m=Math.floor(ms/60000),d=~~(m/1440),h=~~((m%1440)/60),n=m%60;
+  if(d)return h?`${d} روز و ${h} ساعت`:`${d} روز`;
+  if(h)return n?`${h} ساعت و ${n} دقیقه`:`${h} ساعت`;
+  return m?`${m} دقیقه`:'کمتر از ۱ دقیقه';
+}
+
+/* ---------- نمایش لیست ---------- */
+const dayStart=dt=>new Date(dt.getFullYear(),dt.getMonth(),dt.getDate()).getTime();
+const dk=()=>dayStart(new Date());
+let curDay=dk();
+function rowHTML(it){
+  const late=it.due<Date.now();
+  const k=Math.round((dayStart(new Date(it.due))-curDay)/864e5);
+  const cls=late?'late':k<=0?'today':'';
+  return`<div class="r ${cls}">
+    <span class="t"><b>${esc(it.title)}</b><small>${fa(new Date(it.due))}</small></span>
+    <span class="when">${RP[it.repeat]}</span>
+    <span class="rem" data-due="${it.due}">${rem(it.due-Date.now())}</span>
+    <button class="rbtn" data-edit="${esc(it.id)}" title="ویرایش">✏️ ویرایش</button>
+    <button class="x" data-id="${esc(it.id)}" title="حذف" aria-label="حذف">✕</button>
+  </div>`;
+}
+function render(){
+  curDay=dk();const L=$('list');
+  if(!items.length){L.innerHTML='<div class="empty">هنوز یادآوری ثبت نشده است. از فرم بالا یکی اضافه کنید.</div>';return}
+  const now=Date.now();
+  const G=[['⏰ عقب‌افتاده‌ها',[],'late'],['امروز',[]],['فردا',[]],['بعدی‌ها',[]]];
+  [...items].sort((a,b)=>a.due-b.due).forEach(it=>{
+    if(it.due<=now){G[0][1].push(it);return}
+    const k=Math.round((dayStart(new Date(it.due))-curDay)/864e5);
+    G[k<=0?1:k===1?2:3][1].push(it);
+  });
+  L.innerHTML=G.filter(g=>g[1].length).map(g=>`<div class="g ${g[2]||''}">${g[0]}</div>`+g[1].map(rowHTML).join('')).join('');
+}
+$('list').addEventListener('click',e=>{
+  const del=e.target.closest('.x');
+  if(del){items=items.filter(i=>i.id!==del.dataset.id);if(editingId===del.dataset.id)exitEdit();save();render();return}
+  const ed=e.target.closest('[data-edit]');
+  if(ed)startEdit(ed.dataset.edit);
+});
+
+/* ---------- فرم افزودن / ویرایش ---------- */
+function startEdit(id){
+  const it=items.find(i=>i.id===id);if(!it)return;
+  editingId=id;
+  const d=new Date(it.due),[y,m,dd]=jp(d);
+  $('t').value=it.title;$('y').value=y;$('mo').value=m;$('d').value=dd;
+  $('h').value=d.getHours();$('mi').value=d.getMinutes();$('rp').value=it.repeat;
+  $('add').textContent='به‌روزرسانی یادآور';$('cancel').hidden=false;
+  $('formTitle').textContent='✏️ ویرایش یادآور';$('msg').textContent='';
+  $('t').focus();window.scrollTo({top:0,behavior:'smooth'});
+}
+function exitEdit(){
+  editingId=null;
+  $('add').textContent='افزودن یادآور';$('cancel').hidden=true;
+  $('formTitle').textContent='➕ ثبت یادآور جدید';$('msg').textContent='';
+}
+$('cancel').onclick=()=>{exitEdit();fillNow()};
+function fillNow(){const n=new Date(),[y,m,d]=jp(n);$('y').value=y;$('mo').value=m;$('d').value=d;$('h').value=n.getHours();$('mi').value=n.getMinutes()}
+const intVal=(el,lo,hi)=>{const v=Number($(el).value);return Number.isInteger(v)&&v>=lo&&v<=hi?v:null};
+$('add').onclick=()=>{
+  const m=$('msg'),t=$('t').value.trim();m.textContent='';
+  if(!t){m.textContent='عنوان یادآور را وارد کنید.';return}
+  const y=intVal('y',1300,1600),mo=intVal('mo',1,12),d=intVal('d',1,31),h=intVal('h',0,23),mi=intVal('mi',0,59);
+  if(y==null||mo==null||d==null||h==null||mi==null){m.textContent='تاریخ یا ساعت واردشده معتبر نیست (مقادیر را بررسی کنید).';return}
+  const dt=mk(y,mo,d,h,mi);
+  if(!dt){m.textContent='چنین تاریخی در تقویم شمسی وجود ندارد (مثلاً ۳۱ اردیبهشت).';return}
+  if(dt.getTime()<=Date.now()&&!editingId){m.textContent='زمان انتخاب‌شده گذشته است.';return}
+  const rep=$('rp').value;
+  if(editingId){
+    const it=items.find(i=>i.id===editingId);
+    it.title=t;it.due=dt.getTime();it.repeat=rep;it.anchor=dt.getTime();
+    exitEdit();
+  }else{
+    items.push({id:uid(),title:t,due:dt.getTime(),repeat:rep,anchor:dt.getTime()});
+  }
+  save();render();$('t').value='';$('t').focus();
+};
+
+/* ---------- خوش‌آمد و خلاصه روز ---------- */
+let shownToday=false;
+function todayCard(){
+  if(shownToday)return;shownToday=true;
+  const now=Date.now();
+  const t=items.filter(i=>i.due<=now+36e5*24&&i.due>=dk()).sort((a,b)=>a.due-b.due);
+  const late=items.filter(i=>i.due<=now).sort((a,b)=>a.due-b.due);
+  const need=!dh&&window.showDirectoryPicker;
+  const el=document.createElement('div');el.className='toast';
+  const li=[...late,...t].map(i=>`• ${esc(i.title)} — ${fa(new Date(i.due))}`).join('<br>');
+  el.innerHTML=`<small>📋 سامانه یادآور</small>
+    <strong>${late.length?'یادآورهای عقب‌افتاده!':t.length?'یادآورهای امروز':'امروز یادآوری ندارید'}</strong>
+    ${li?`<div class="li">${li}</div>`:''}
+    ${need?'<em>برای بارگذاری یادآورهای قبلی، پوشه پشتیبان را انتخاب کنید.</em>':''}
+    <div class="b">${need?'<button class="ok" data-go="1">انتخاب پوشه پشتیبان</button>':''}<button class="${need?'':'ok'}" data-x="1">بستن</button></div>`;
+  el.onclick=e=>{if(e.target.dataset.go){$('fnew').click();el.remove()}else if(e.target.dataset.x)el.remove()};
+  $('toasts').appendChild(el);
+}
+
+/* ---------- راه‌اندازی ذخیره‌سازی ---------- */
+(async()=>{
+  try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+  if(!window.showDirectoryPicker){$('fnew').hidden=true;fsMsg('این مرورگر پشتیبان‌گیری خودکار را پشتیبانی نمی‌کند (کروم/اج پشتیبانی می‌کنند)؛ از «دانلود پشتیبان» و «بازیابی» استفاده کنید.',1);return}
+  const h=await idbGet('dh');
+  if(!h){
+    /* مهاجرت از حالت قدیمی (فایل تکی Reminder-data.json): یک‌بار خوانده و ادغام می‌شود */
+    const old=await idbGet('fh');
+    if(old){try{const t=await(await old.getFile()).text();const p=sanitize(JSON.parse(t));if(p&&p.items.length)merge(p.items)}catch(e){}}
+    fsMsg('برای پشتیبان‌گیری دوره‌ای هر ۵ دقیقه، «انتخاب پوشه پشتیبان» را بزنید.',1);return
+  }
+  dh=h;
+  try{
+    if(await dh.queryPermission({mode:'readwrite'})==='granted')await startBackupMode();
+    else{$('fperm').hidden=false;fsMsg('برای ادامه‌ی پشتیبان‌گیری خودکار، اجازه‌ی دسترسی بدهید.',1)}
+  }catch(e){$('fperm').hidden=false}
+})().finally(todayCard);
+
+/* ---------- صدا و نوتیف ---------- */
+let ac;const unlock=()=>{try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();ac.resume()}catch(e){}};
+document.addEventListener('click',unlock);document.addEventListener('keydown',unlock);
+function beep(){try{unlock();[0,.25].forEach((t,i)=>{const o=ac.createOscillator(),g=ac.createGain(),s=ac.currentTime+t;o.frequency.value=i?1046:784;g.gain.setValueAtTime(.2,s);g.gain.exponentialRampToValueAtTime(.001,s+.3);o.connect(g);g.connect(ac.destination);o.start(s);o.stop(s+.3)})}catch(e){}}
+function nstat(){const s=$('ns');
+  if(!('Notification' in window)){s.textContent='نوتیف سیستم در این مرورگر در دسترس نیست؛ پیغام روی صفحه نمایش داده می‌شود.';return}
+  s.textContent=Notification.permission==='granted'?'نوتیف سیستم فعال است — این تب باز بماند.':Notification.permission==='denied'?'نوتیف سیستم بسته است؛ پیغام روی صفحه نمایش داده می‌شود.':'برای دریافت یادآور، این تب مرورگر باید باز بماند.'}
+$('notif').addEventListener('click',()=>{if('Notification' in window)Notification.requestPermission().then(nstat).catch(nstat);else nstat()});
+
+/* ---------- سررسید ---------- */
+const shown=new Set();let flashT=0;
+function flash(){if(flashT)return;flashT=setInterval(()=>{if(!document.querySelector('.toast')){clearInterval(flashT);flashT=0;document.title=BASE;return}document.title=document.title===BASE?'🔔 سررسید یادآور!':BASE},900)}
+function fire(it,n){
+  shown.add(it.id);
+  const dt=new Date(it.due),late=n-it.due>180000,el=document.createElement('div');
+  el.className='toast';el.setAttribute('role','alert');
+  el.innerHTML=`<small>🔔 یادآوری • ساعت ${p2(dt.getHours())}:${p2(dt.getMinutes())}</small>
+    <strong>${esc(it.title)}</strong>${late?'<em>این یادآور عقب افتاده بود</em>':''}
+    <div class="b"><button class="ok" data-a="done">انجام شد</button><button data-a="s10">۱۰ دقیقه بعد</button><button data-a="s60">۱ ساعت بعد</button></div>`;
+  el.addEventListener('click',e=>{
+    const a=e.target.dataset.a;if(!a)return;
+    shown.delete(it.id);el.remove();
+    if(a==='done'){
+      const nd=nextOccurrence(it);
+      if(nd)it.due=nd.getTime();else items=items.filter(x=>x.id!==it.id);
+    }else it.due=Date.now()+(a==='s10'?6e5:36e5);
+    save();render();
+  });
+  $('toasts').appendChild(el);beep();flash();
+  try{if(Notification.permission==='granted')new Notification('یادآوری',{body:it.title,requireInteraction:true})}catch(e){}
+}
+function tick(){
+  const n=Date.now(),d=new Date();
+  $('clock').innerHTML=`${new Intl.DateTimeFormat('fa-IR',{weekday:'long'}).format(d)}<br>${fa(d)}`;
+  document.querySelectorAll('.rem').forEach(e=>e.textContent=rem(+e.dataset.due-n));
+  items.forEach(it=>{if(it.due<=n&&!shown.has(it.id))fire(it,n)});
+  if(curDay!==dk())render();
+}
+
+
+/* ---------- همگام‌سازی ابری (Firebase) ---------- */
+const FB_CONFIG={apiKey:'',authDomain:'',projectId:'',appId:''}; /* پیکربندی پروژه Firebase را اینجا بگذارید */
+const FBU='https://www.gstatic.com/firebasejs/10.14.1/';
+let cloud=null,cloudOn=false,unsub=null,remoteU=new Map();
+const cMsg=(t,bad)=>{const e=$('cs');e.textContent=t;e.style.color=bad?'var(--danger)':'var(--ok)'};
+async function initCloud(){
+  if(!FB_CONFIG.apiKey){$('cbox').style.display='none';cMsg('همگام‌سازی ابری تنظیم نشده؛ برنامه به‌صورت محلی کار می‌کند.',1);return}
+  try{
+    const[{initializeApp},A,F]=await Promise.all([import(FBU+'firebase-app.js'),import(FBU+'firebase-auth.js'),import(FBU+'firebase-firestore.js')]);
+    const app=initializeApp(FB_CONFIG),auth=A.getAuth(app),db=F.getFirestore(app);
+    cloud={A,F,auth,db};
+    $('cin').onclick=async()=>{try{await A.signInWithEmailAndPassword(auth,$('cem').value.trim(),$('cpw').value);$('cpw').value=''}catch(e){cMsg('ورود ناموفق: ایمیل یا رمز درست نیست.',1)}};
+    $('cout').onclick=()=>A.signOut(auth);
+    A.onAuthStateChanged(auth,u=>u?startCloud(u):stopCloud());
+  }catch(e){cMsg('اتصال به سرویس ابری ممکن نیست؛ برنامه به‌صورت محلی کار می‌کند.',1)}
+}
+function stopCloud(){if(unsub){unsub();unsub=null}cloudOn=false;$('cbox').style.display='flex';$('cout').hidden=true;cMsg('وارد حساب ابری نشده‌اید؛ برنامه به‌صورت محلی کار می‌کند.',1)}
+function startCloud(u){
+  const{F,db}=cloud,col=F.collection(db,'users',u.uid,'reminders');
+  $('cbox').style.display='none';$('cout').hidden=false;cloudOn=true;
+  unsub=F.onSnapshot(col,qs=>{
+    const list=[],tm={};remoteU=new Map();
+    qs.forEach(d=>{const r=d.data();remoteU.set(d.id,+r.u||0);
+      if(r.del)tm[d.id]=+r.u||0;else{const p=sanitize([{...r,id:d.id}]);if(p&&p.items[0])list.push(p.items[0])}});
+    if(merge(list,tm)){saveLocal();rev++;dirty=true;render()}
+    cloudPush();cMsg(`✓ همگام با ابر — ${items.length} یادآور`);
+  },e=>cMsg('خطا در همگام‌سازی: '+(e.code||e.message),1));
+}
+function cloudPush(){
+  if(!cloudOn)return;const{F,db,auth}=cloud,u=auth.currentUser;if(!u)return;
+  const col=F.collection(db,'users',u.uid,'reminders');
+  const put=(id,data)=>F.setDoc(F.doc(col,id),data).catch(e=>cMsg('ارسال به ابر ناموفق: '+(e.code||e.message),1));
+  for(const it of items)if((it.u||0)>(remoteU.has(it.id)?remoteU.get(it.id):-1)){remoteU.set(it.id,it.u||0);put(it.id,{title:it.title,due:it.due,repeat:it.repeat,anchor:it.anchor,u:it.u||0})}
+  for(const[id,t] of Object.entries(tomb))if(t>(remoteU.has(id)?remoteU.get(id):-1)){remoteU.set(id,t);put(id,{del:true,u:t})}
+}
+
+/* ---------- شروع ---------- */
+fillNow();render();nstat();tick();setInterval(tick,1000);
+document.addEventListener('visibilitychange',tick);
+initCloud();
+</script>
+</body>
+</html>
